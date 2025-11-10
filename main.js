@@ -15889,75 +15889,92 @@ Game.Launch=function()
         str += '<div id="devConsoleContent">';
         str += '<div class="title" style="font-size:14px;margin:6px;">Dev tools</div>';
 
-        // === MAIN DEV BUTTONS ===
-        str += '<a class="option neato" '+Game.clickStr+'="Game.Ascend(1);">Ascend</a>';
-        str += '<div class="line"></div>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.cookies*=10;Game.cookiesEarned*=10;">x10</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.cookies/=10;Game.cookiesEarned/=10;">/10</a><br>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.cookies*=1000;Game.cookiesEarned*=1000;">x1k</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.cookies/=1000;Game.cookiesEarned/=1000;">/1k</a><br>';
-        str += '<a class="option neato" '+Game.clickStr+'="for (var i in Game.Objects){Game.Objects[i].buy(100);}">Buy 100 of all</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="for (var i in Game.Objects){Game.Objects[i].sell(100);}">Sell 100 of all</a><br>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.gainLumps(100);">+100 lumps</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.RuinTheFun(1);">Ruin The Fun</a>';
-        str += '<a class="option warning" '+Game.clickStr+'="Game.HardReset(2);">Wipe</a><br>';
-        str += '<div class="line"></div>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.SetAllUpgrades(1);">All upgrades</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.SetAllAchievs(1);">All achievements</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.MaxSpecials();">Max specials</a>';
-        str += '<a class="option neato" '+Game.clickStr+'="Game.GetAllDebugs();">All debugs</a><br>';
-        str += '<div class="line"></div>';
+    /*=====================================================================================
+    INITIALIZATION END; GAME READY TO LAUNCH
+    =======================================================================================*/
 
-        // === GOLDEN COOKIE BUTTONS ===
-        for (var i = 0; i < Game.goldenCookieChoices.length / 2; i++) {
-            str += '<a class="option neato" '+Game.clickStr+
-                   '="var newShimmer=new Game.shimmer(\'golden\');newShimmer.force=\''+
-                   Game.goldenCookieChoices[i*2+1]+'\';">'+
-                   Game.goldenCookieChoices[i*2]+'</a>';
+    function waitForGame() {
+        if (typeof Game === 'undefined') {
+            setTimeout(waitForGame, 100);
+            return;
         }
 
-        // === COMMAND BAR SECTION ===
-        str += '<div class="line"></div>';
-        str += '<div id="devCommandSection" style="margin:6px;">';
-        str += '<input id="devCommandBar" type="text" placeholder="Enter command..." style="width:90%;padding:3px;background:#111;color:#0f0;border:1px solid #444;">';
-        str += '<div id="devCommandResult" style="font-size:10px;color:#f33;margin-top:4px;"></div>';
-        str += '<div style="font-size:10px;color:#888;margin-top:4px;">Press <b>`</b> to toggle this section.</div>';
-        str += '</div>';
-        str += '</div>'; // end devConsoleContent
+        // Kill shimmers
+        Game.killShimmers();
 
-        // === APPLY HTML ===
-        l('devConsole').innerHTML = str;
+        // Ruin the fun function
+        Game.RuinTheFun = function(silent) {
+            Game.popups = 0;
+            Game.SetAllUpgrades(1);
+            Game.SetAllAchievs(1);
+            Game.popups = 0;
+            Game.Earn(999999999999999999999999999999);
+            Game.MaxSpecials();
+            Game.nextResearch = 0;
+            Game.researchT = -1;
+            Game.upgradesToRebuild = 1;
+            Game.recalculateGains = 1;
+            Game.popups = 1;
 
-        // === COMMAND BAR LOGIC ===
-        var input = document.getElementById('devCommandBar');
-        var resultBox = document.getElementById('devCommandResult');
-        if (input) {
-            input.addEventListener('keydown', function(event) {
-                if (event.key === 'Enter') {
-                    var command = input.value.trim();
-                    if (command.length > 0) {
-                        try {
-                            var output = eval(command);
-                            resultBox.style.color = '#0f0';
-                            resultBox.textContent = '✔ Command executed successfully.';
-                            if (typeof output !== 'undefined' && output !== null) {
-                                resultBox.textContent += ' Output: ' + output;
-                            }
-                            if (typeof Game !== 'undefined') {
-                                Game.recalculateGains = 1;
-                                Game.upgradesToRebuild = 1;
-                            }
-                        } catch (e) {
-                            console.error('Command error:', e);
-                            resultBox.style.color = '#f33';
-                            resultBox.textContent = '*COMMAND FAILED PLEASE TRY AGAIN*';
-                        }
-                    }
-                    input.value = '';
+            for (var i in Game.Objects) {
+                var me = Game.Objects[i];
+                if (me.level < 10) {
+                    me.level = 9;
+                    me.levelUp(true);
                 }
-            });
-        }
+                if (me.minigame && me.minigame.onRuinTheFun) me.minigame.onRuinTheFun();
+            }
 
+            if (!silent) {
+                Game.Notify('Thou doth ruineth the fun!', "You're free. Free at last.", [11,5]);
+            }
+
+            return 'You feel a bitter taste in your mouth...';
+        };
+
+        Game.SetAllUpgrades = function(on) {
+            Game.popups = 0;
+            var leftout = ['Magic shenanigans','Occult obstruction','Glucose-charged air'];
+            for (var i in Game.Upgrades) {
+                if (on && (Game.Upgrades[i].pool === 'toggle' || leftout.indexOf(Game.Upgrades[i].name) !== -1)) {}
+                else if (on) Game.Upgrades[i].earn();
+                else if (!on) Game.Upgrades[i].lose();
+            }
+            Game.upgradesToRebuild = 1;
+            Game.recalculateGains = 1;
+            Game.popups = 1;
+        };
+
+        Game.SetAllAchievs = function(on) {
+            Game.popups = 0;
+            for (var i in Game.Achievements) {
+                if (on && Game.Achievements[i].pool !== 'dungeon') Game.Win(Game.Achievements[i].name);
+                else if (!on) Game.RemoveAchiev(Game.Achievements[i].name);
+            }
+            Game.recalculateGains = 1;
+            Game.popups = 1;
+        };
+
+        Game.MaxSpecials = function() {
+            Game.dragonLevel = Game.dragonLevels.length - 1;
+            Game.santaLevel = Game.santaLevels.length - 1;
+        };
+
+        Game.OpenSesame = function() {
+            if (Game.sesame) return;
+            Game.sesame = 1;
+            Game.Achievements['Cheated cookies taste awful'].won = 1;
+            console.log("Dev tools activated!");
+        };
+
+        // Example: add more functions as needed here...
+
+        console.log("Cookie Clicker Debug Mod loaded!");
+    }
+
+    waitForGame();
+
+})();
         // === FPS GRAPH ===
         if (!l('fpsGraph')) {
             var div = document.createElement('canvas');
