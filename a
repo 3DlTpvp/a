@@ -1,0 +1,18 @@
+document.addEventListener('keydown', function(event) {
+    // Check if the pressed key is 'Enter'
+    if (event.key === 'Enter') {
+        // Prevent the default action of the 'Enter' key (e.g., submitting a form)
+        event.preventDefault(); 
+
+        // Display a prompt to the user and store their input
+        let userInput = prompt("Please enter something:");
+
+        // Check if the user provided input (didn't cancel the prompt)
+        if (userInput !== null) {
+            // Log the user's input to the console
+            console.log("User input:", userInput);
+        } else {
+            console.log("User cancelled the input prompt.");
+        }
+    }
+});
