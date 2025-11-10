@@ -15965,8 +15965,29 @@ Game.Launch=function()
 		}
 		
 		Game.debugTimersOn=0;
-		Game.sesame=0;
+		Game.sesame=1;
 		Game.OpenSesame=function()
+ document.addEventListener('DOMContentLoaded', function() {
+       const consoleInput = document.getElementById('consoleInput');
+
+       consoleInput.addEventListener('keydown', function(event) {
+           if (event.key === 'Enter') {
+               const command = consoleInput.value;
+               console.log('Executing command:', command); // Log the command
+
+               try {
+                   // Execute the command in the console.
+                   // Be very cautious with eval() for security reasons.
+                   // Consider alternatives like specific function calls based on command parsing.
+                   eval(command);
+               } catch (error) {
+                   console.error('Error executing command:', error);
+               }
+
+               consoleInput.value = ''; // Clear the input field after execution
+           }
+       });
+   });
 		{
 			var str='';
 			str+='<div class="icon" style="position:absolute;left:-9px;top:-6px;background-position:'+(-10*48)+'px '+(-6*48)+'px;"></div>';
