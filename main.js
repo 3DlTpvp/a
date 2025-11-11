@@ -15965,7 +15965,153 @@ Game.Launch=function()
             Game.sesame = 1;
             Game.Achievements['Cheated cookies taste awful'].won = 1;
             console.log("Dev tools activated!");
-        };
+alert("Secret Dev Console activated...");
+const STORAGE_KEY = 'miniDevConsoleCode';
+  let box, input, output;
+
+  function createConsole() {
+    if (box) return box; // already exists
+
+    box = document.createElement('div');
+    box.id = 'miniDevConsole';
+    Object.assign(box.style, {
+      position: 'fixed',
+      top: '20px',
+      right: '20px',
+      width: '400px',
+      background: 'rgba(0,0,0,0.9)',
+      border: '1px solid #555',
+      borderRadius: '6px',
+      color: '#0f0',
+      zIndex: 999999,
+      fontFamily: 'monospace',
+      padding: '10px',
+      boxShadow: '0 0 10px #000',
+      display: 'none'
+    });
+
+    // Header
+    const header = document.createElement('div');
+    Object.assign(header.style, {
+      cursor: 'move',
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    });
+    header.innerHTML = `<strong>Mini Dev Console</strong>`;
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = '✖';
+    Object.assign(closeBtn.style, {
+      background: 'none',
+      color: '#f55',
+      border: 'none',
+      cursor: 'pointer',
+      fontSize: '16px'
+    });
+    closeBtn.onclick = () => (box.style.display = 'none');
+    header.appendChild(closeBtn);
+    box.appendChild(header);
+
+    // Textarea
+    input = document.createElement('textarea');
+    Object.assign(input.style, {
+      width: '100%',
+      height: '100px',
+      background: '#111',
+      color: '#0f0',
+      marginTop: '6px',
+      fontFamily: 'monospace'
+    });
+    input.placeholder = 'Type JavaScript code here...';
+    input.value = localStorage.getItem(STORAGE_KEY) || '';
+    box.appendChild(input);
+
+    // Run button
+    const runBtn = document.createElement('button');
+    runBtn.textContent = '▶ Run Code';
+    Object.assign(runBtn.style, {
+      marginTop: '6px',
+      padding: '4px 8px',
+      cursor: 'pointer',
+      background: '#333',
+      color: '#fff',
+      border: '1px solid #555'
+    });
+    runBtn.onmouseenter = () => (runBtn.style.background = '#444');
+    runBtn.onmouseleave = () => (runBtn.style.background = '#333');
+    box.appendChild(runBtn);
+
+    // Output
+    output = document.createElement('pre');
+    Object.assign(output.style, {
+      marginTop: '6px',
+      background: '#000',
+      color: '#0f0',
+      padding: '6px',
+      maxHeight: '150px',
+      overflowY: 'auto'
+    });
+    box.appendChild(output);
+
+    // Run function
+    const runCode = () => {
+      const code = input.value;
+      localStorage.setItem(STORAGE_KEY, code);
+      try {
+        const result = eval(code);
+        output.textContent = '✅ ' + String(result);
+      } catch (e) {
+        output.textContent = '❌ ' + e;
+      }
+    };
+    runBtn.onclick = runCode;
+
+    // Make draggable
+    let dragging = false, offsetX = 0, offsetY = 0;
+    header.addEventListener('mousedown', e => {
+      dragging = true;
+      offsetX = e.clientX - box.getBoundingClientRect().left;
+      offsetY = e.clientY - box.getBoundingClientRect().top;
+    });
+    document.addEventListener('mouseup', () => (dragging = false));
+    document.addEventListener('mousemove', e => {
+      if (dragging) {
+        Object.assign(box.style, {
+          left: e.clientX - offsetX + 'px',
+          top: e.clientY - offsetY + 'px',
+          right: 'auto'
+        });
+      }
+    });
+
+    document.body.appendChild(box);
+    return box;
+  }
+
+  // Keyboard handler — toggle console with `
+  document.addEventListener('keydown', e => {
+    if (e.key === '`' && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const consoleBox = createConsole();
+      consoleBox.style.display =
+        consoleBox.style.display === 'none' ? 'block' : 'none';
+      if (consoleBox.style.display === 'block') input.focus();
+      e.preventDefault();
+    }
+
+    // Run code with Ctrl+Enter or Cmd+Enter
+    if (box && box.style.display !== 'none' &&
+        (e.key === 'Enter' && (e.ctrlKey || e.metaKey))) {
+      const code = input.value;
+      localStorage.setItem(STORAGE_KEY, code);
+      try {
+        const result = eval(code);
+        output.textContent = '✅ ' + String(result);
+      } catch (err) {
+        output.textContent = '❌ ' + err;
+      }
+    }
+  });
+ }})();
 
         // Example: add more functions as needed here...
 
@@ -15993,26 +16139,6 @@ Game.Launch=function()
             ctx.fillRect(0, 0, 128, 64);
         }
 
-        // === DISPLAY DEBUG CONSOLE ===
-        l('debug').style.display = 'block';
-        Game.sesame = 1;
-        if (Game.Achievements['Cheated cookies taste awful'])
-            Game.Achievements['Cheated cookies taste awful'].unlock();
 
-        // === HOTKEY TOGGLE FOR COMMAND INPUT ===
-        document.addEventListener('keydown', function(e) {
-            if (e.key === '`' && !e.ctrlKey && !e.metaKey) {
-                var section = document.getElementById('devCommandSection');
-                if (section) {
-                    section.style.display = (section.style.display === 'none') ? 'block' : 'none';
-                }
-            }
-        });
-
-        console.log('✅ Dev Tools activated! Press ` to toggle command input.');
-    };
-
-    // Run it immediately
-    Game.OpenSesame();
 })();
 
